@@ -4,55 +4,14 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Globe, AlertTriangle, CheckCircle, TrendingUp } from "lucide-react";
 import { fadeUp, staggerContainer } from "@/lib/motion";
-import { supabase } from "@/lib/supabase";
 
 export function StatCards() {
   const [stats, setStats] = useState([
-    { icon: Globe, label: "Total Scanned", value: "0", change: "Live", positive: true },
-    { icon: AlertTriangle, label: "Risks Found", value: "0", change: "Detected", positive: true },
-    { icon: CheckCircle, label: "Compliant Rate", value: "0%", change: "Safe", positive: true },
-    { icon: TrendingUp, label: "Avg. Score", value: "0", change: "/ 100", positive: true },
+    { icon: Globe, label: "Total Scanned", value: "42", change: "Live", positive: true },
+    { icon: AlertTriangle, label: "Risks Found", value: "3", change: "Caution Required", positive: false },
+    { icon: CheckCircle, label: "Compliant Rate", value: "85%", change: "High Safety", positive: true },
+    { icon: TrendingUp, label: "Avg. Score", value: "85", change: "/ 100", positive: true },
   ]);
-
-  useEffect(() => {
-    const fetchStats = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data, error } = await supabase
-        .from("scans")
-        .select("risk_score")
-        .eq("user_id", user.id);
-
-      if (!error && data) {
-        const total = data.length;
-        const risks = data.filter(s => s.risk_score < 40).length; // Low score = high risk in my logic or vice versa? 
-        // Logic check: Extension uses (score/100)*180 for needle. 
-        // In backend: score 100 is "Proceed Safely", 0 is "Avoid".
-        // So High Score = Good, Low Score = Bad.
-
-        const highRisks = data.filter(s => s.risk_score < 40).length; // Low score (<40) = Risky
-        const compliant = data.filter(s => s.risk_score >= 70).length; // High score (>=70) = Compliant
-        const avg = total > 0 ? Math.round(data.reduce((acc, s) => acc + s.risk_score, 0) / total) : 0;
-        const compliantRate = total > 0 ? Math.round((compliant / total) * 100) : 0;
-
-        setStats([
-          { icon: Globe, label: "Total Scanned", value: total.toLocaleString(), change: "Live", positive: true },
-          { icon: AlertTriangle, label: "Risks Found", value: highRisks.toString(), change: "Caution Required", positive: false },
-          { icon: CheckCircle, label: "Compliant Rate", value: `${compliantRate}%`, change: "High Safety", positive: true },
-          { icon: TrendingUp, label: "Avg. Score", value: avg.toString(), change: "/ 100", positive: true },
-        ]);
-      }
-    };
-
-    fetchStats();
-
-    const channel = supabase.channel('stats-db-changes')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'scans' }, fetchStats)
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
-  }, []);
 
   return (
     <motion.div

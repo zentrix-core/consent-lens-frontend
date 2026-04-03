@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 
 import { usePathname, useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Overview", href: "/dashboard" },
@@ -28,8 +27,7 @@ export function DashboardSidebar() {
   const router = useRouter();
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push("/login");
+    router.push("/");
   };
 
   return (

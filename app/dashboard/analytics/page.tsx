@@ -1,67 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+
 import { BarChart2, PieChart, Activity, Shield, Target, Zap } from "lucide-react";
 import { motion } from "framer-motion";
 import { fadeUp, staggerContainer } from "@/lib/motion";
 
 export default function AnalyticsPage() {
     const [stats, setStats] = useState({
-        total: 0,
-        avgScore: 0,
-        safeCount: 0,
-        riskyCount: 0
+        total: 42,
+        avgScore: 85,
+        safeCount: 39,
+        riskyCount: 3
     });
-
-    const fetchStats = async () => {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-            const { data, error } = await supabase
-                .from("scans")
-                .select("risk_score")
-                .eq("user_id", user.id);
-
-            if (!error && data) {
-                const total = data.length;
-                const avg = total > 0 ? Math.round(data.reduce((acc: number, s: any) => acc + s.risk_score, 0) / total) : 0;
-                const safe = data.filter(s => s.risk_score >= 70).length;
-                const risky = data.filter(s => s.risk_score < 40).length;
-                setStats({ total, avgScore: avg, safeCount: safe, riskyCount: risky });
-            }
-        }
-    };
-
-    useEffect(() => {
-        const setupRealtime = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
-
-            await fetchStats();
-
-            const channel = supabase
-                .channel('analytics-realtime')
-                .on(
-                    'postgres_changes',
-                    {
-                        event: 'INSERT',
-                        schema: 'public',
-                        table: 'scans',
-                        filter: `user_id=eq.${user.id}`
-                    },
-                    () => {
-                        fetchStats();
-                    }
-                )
-                .subscribe();
-
-            return () => {
-                supabase.removeChannel(channel);
-            };
-        };
-
-        setupRealtime();
-    }, []);
 
     return (
         <div className="flex flex-col gap-8 p-8 max-w-7xl mx-auto">

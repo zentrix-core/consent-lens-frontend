@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+
 import { format } from "date-fns";
 import { Search, Filter, ExternalLink, ShieldCheck, ShieldAlert, ShieldQuestion } from "lucide-react";
 import { motion } from "framer-motion";
@@ -17,59 +17,12 @@ interface ScanEntry {
 }
 
 export default function HistoryPage() {
-    const [scans, setScans] = useState<ScanEntry[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [scans, setScans] = useState<ScanEntry[]>([
+        { id: "1", site_url: "example.com", scanned_at: new Date().toISOString(), risk_score: 85, decision: "Safe", reasons: ["Clear data retention policy", "No third-party trackers"] },
+        { id: "2", site_url: "unsafe-site.net", scanned_at: new Date().toISOString(), risk_score: 30, decision: "Avoid", reasons: ["Sells data to third parties", "Indefinite data retention", "Dark patterns detected"] }
+    ]);
+    const [loading, setLoading] = useState(false);
     const [search, setSearch] = useState("");
-
-    const fetchScans = async () => {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-            const { data, error } = await supabase
-                .from("scans")
-                .select("*")
-                .eq("user_id", user.id)
-                .order("scanned_at", { ascending: false });
-
-            if (!error && data) {
-                setScans(data);
-            }
-        }
-        setLoading(false);
-    };
-
-    useEffect(() => {
-        const setupRealtime = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
-
-            // Fetch initial data
-            await fetchScans();
-
-            // Real-time subscription
-            const channel = supabase
-                .channel('realtime-scans')
-                .on(
-                    'postgres_changes',
-                    {
-                        event: 'INSERT',
-                        schema: 'public',
-                        table: 'scans',
-                        filter: `user_id=eq.${user.id}`
-                    },
-                    (payload) => {
-                        console.log('New scan detected:', payload);
-                        setScans(prev => [payload.new as ScanEntry, ...prev]);
-                    }
-                )
-                .subscribe();
-
-            return () => {
-                supabase.removeChannel(channel);
-            };
-        };
-
-        setupRealtime();
-    }, []);
 
     const filteredScans = scans.filter(s =>
         s.site_url.toLowerCase().includes(search.toLowerCase()) ||

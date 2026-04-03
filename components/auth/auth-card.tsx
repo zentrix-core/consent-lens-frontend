@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import { Shield, ArrowRight, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { scaleIn, easeOut } from "@/lib/motion";
-import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 
 interface AuthCardProps {
@@ -24,89 +23,19 @@ export function AuthCard({ mode }: AuthCardProps) {
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
-    const cleanEmail = email.trim();
-    const cleanPassword = password.trim();
-
-    try {
-      let authResponse;
-      if (isLogin) {
-        authResponse = await supabase.auth.signInWithPassword({
-          email: cleanEmail,
-          password: cleanPassword,
-        });
-        if (authResponse.error) throw authResponse.error;
-      } else {
-        authResponse = await supabase.auth.signUp({
-          email: cleanEmail,
-          password: cleanPassword,
-          options: {
-            data: {
-              full_name: name,
-              avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${cleanEmail}`
-            },
-          },
-        });
-
-        if (authResponse.error) {
-          if (authResponse.error.message.includes("already registered")) {
-            throw new Error("This email is already registered. Please sign in instead.");
-          }
-          throw authResponse.error;
-        }
-
-        // Handle case where email confirmation is required
-        if (authResponse.data?.user && !authResponse.data.session) {
-          alert("Success! Please check your email inbox to verify your account before logging in.");
-          setLoading(false);
-          router.push("/login");
-          return;
-        }
-      }
-
-      const user = authResponse.data.user;
-      if (user) {
-        // Enforce storage in our 'profiles' table for all auth methods
-        const { error: profileError } = await supabase.from('profiles').upsert({
-          id: user.id,
-          full_name: user.user_metadata?.full_name || name || (isLogin ? "User" : "New User"),
-          avatar_url: user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`,
-          updated_at: new Date().toISOString(),
-        });
-
-        if (profileError) {
-          console.warn("Profile sync warning:", profileError.message);
-        }
-      }
-
-      if (!isLogin) {
-        alert("Account successfully created! You can now log in.");
-        window.location.href = "/";
-        return;
-      }
-
-      router.push("/dashboard");
-    } catch (error: any) {
-      alert(error.message);
-    } finally {
-      setLoading(false);
-    }
+    // Simulate slight delay
+    setTimeout(() => {
+        setLoading(false);
+        router.push("/dashboard");
+    }, 500);
   };
 
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-      if (error) throw error;
-    } catch (error: any) {
-      alert(error.message);
-      setGoogleLoading(false);
-    }
+    setTimeout(() => {
+        setGoogleLoading(false);
+        router.push("/dashboard");
+    }, 500);
   };
 
   return (

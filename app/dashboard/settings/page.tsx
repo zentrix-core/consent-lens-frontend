@@ -1,29 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+
 import { User, Mail, Shield, Smartphone, Globe, Bell, Key, LogOut } from "lucide-react";
 import { motion } from "framer-motion";
 import { fadeUp } from "@/lib/motion";
 import { useRouter } from "next/navigation";
 
 export default function SettingsPage() {
-    const [profile, setProfile] = useState<any>(null);
+    const [profile, setProfile] = useState<any>({
+        id: "user-democonsentlens",
+        full_name: "Demo User",
+        avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix",
+        email: "demo@consentlens.com",
+    });
     const router = useRouter();
 
     const [autoSync, setAutoSync] = useState(true);
 
-    useEffect(() => {
-        supabase.auth.getUser().then(({ data: { user } }) => {
-            if (user) {
-                supabase.from('profiles').select('*').eq('id', user.id).single()
-                    .then(({ data }) => setProfile(data || { id: user.id, full_name: user.user_metadata.full_name, avatar_url: user.user_metadata.avatar_url, email: user.email }));
-            }
-        });
-    }, []);
-
     const handleLogout = async () => {
-        await supabase.auth.signOut();
         window.location.href = "/";
     };
 

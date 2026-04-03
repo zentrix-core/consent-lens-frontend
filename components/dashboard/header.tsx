@@ -1,46 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { useState } from "react";
 import { User, Copy, Check, ChevronDown, LogOut, Settings as SettingsIcon, Bell } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export function DashboardHeader() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<any>({
+    email: "demo@consentlens.com",
+    user_metadata: {
+      full_name: "Demo User",
+      avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"
+    }
+  });
   const [showDropdown, setShowDropdown] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    supabase.auth.getUser().then(async ({ data }) => {
-      if (data.user) {
-        // First set the auth user
-        setUser(data.user);
-
-        // Then try to get the enriched profile from the database
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', data.user.id)
-          .single();
-
-        if (profile) {
-          // Merge profile data into user object for the UI
-          setUser((prev: any) => ({
-            ...prev,
-            user_metadata: {
-              ...prev?.user_metadata,
-              full_name: profile.full_name,
-              avatar_url: profile.avatar_url,
-            }
-          }));
-        }
-      }
-    });
-  }, []);
-
   const handleLogout = async () => {
-    await supabase.auth.signOut();
     window.location.href = "/";
   };
 

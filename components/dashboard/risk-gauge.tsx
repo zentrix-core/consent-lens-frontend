@@ -3,35 +3,9 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { easeOut } from "@/lib/motion";
-import { supabase } from "@/lib/supabase";
 
 export function RiskGauge() {
-  const [score, setScore] = useState(0);
-
-  useEffect(() => {
-    const fetchAvg = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data, error } = await supabase
-        .from("scans")
-        .select("risk_score")
-        .eq("user_id", user.id);
-
-      if (!error && data && data.length > 0) {
-        const avg = Math.round(data.reduce((acc, s) => acc + s.risk_score, 0) / data.length);
-        setScore(avg);
-      }
-    };
-
-    fetchAvg();
-
-    const channel = supabase.channel('gauge-db-changes')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'scans' }, fetchAvg)
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
-  }, []);
+  const [score, setScore] = useState(85);
 
   const circumference = 2 * Math.PI * 54;
   const offset = circumference - (score / 100) * circumference;

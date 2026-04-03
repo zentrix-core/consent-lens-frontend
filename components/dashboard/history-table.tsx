@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
 import { format } from "date-fns";
 
 interface ScanEntry {
@@ -33,35 +32,12 @@ function riskBg(score: number) {
 }
 
 export function HistoryTable() {
-  const [scans, setScans] = useState<ScanEntry[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchScans = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data, error } = await supabase
-          .from("scans")
-          .select("*")
-          .eq("user_id", user.id)
-          .order("scanned_at", { ascending: false })
-          .limit(6);
-
-        if (!error && data) {
-          setScans(data);
-        }
-      }
-      setLoading(false);
-    };
-
-    fetchScans();
-
-    const channel = supabase.channel('recent-db-changes')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'scans' }, fetchScans)
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
-  }, []);
+  const [scans, setScans] = useState<ScanEntry[]>([
+    { id: "1", site_url: "example.com", scanned_at: new Date().toISOString(), risk_score: 85, decision: "Safe" },
+    { id: "2", site_url: "sketchy-site.net", scanned_at: new Date().toISOString(), risk_score: 35, decision: "Avoid" },
+    { id: "3", site_url: "social-media.com", scanned_at: new Date().toISOString(), risk_score: 60, decision: "Caution" },
+  ]);
+  const [loading, setLoading] = useState(false);
 
   if (loading) {
     return (
